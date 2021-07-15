@@ -4,17 +4,23 @@
 (require '[clojure.data.csv :as csv]
          '[clojure.java.io :as io])
 
+(defn ledger-location
+  "Returns an absolute datfile/ledgerfile path"
+  []
+  (
+   clojure.string/join "/" [ (System/getProperty "user.home") ".ledger.csv"  ]))
+
 (defn account
   "Writes to ledger"
   [amount debit credit currency]
-  (with-open [writer (io/writer "ledger.csv" :append true)]
+  (with-open [writer (io/writer (ledger-location) :append true)]
     (csv/write-csv writer [[(System/currentTimeMillis) amount debit credit currency]]))
   )
 
 (defn init
   "Initializes a ledger with its headers"
   []
-  (if-not (.exists (io/file "ledger.csv"))
+  (if-not (.exists (io/file (ledger-location)))
     (account "amount" "debit" "credit" "currency")))
 
 (defn report
