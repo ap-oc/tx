@@ -5,33 +5,46 @@
          '[clojure.java.io :as io])
 
 (defn ledger-location
-  "Returns an absolute datfile/ledgerfile path"
+  
+  ;; returns an absolute datfile/ledgerfile path
   []
-  (
-   clojure.string/join "/" [ (System/getProperty "user.home") ".ledger.csv"  ]))
+  (clojure.string/join "/" [(System/getProperty "user.home") ".ledger.csv"]))
 
-(defn account
-  "Writes to ledger"
-  [amount debit credit currency]
+(defn record
+  
+  ;; ledger writer
+  [timestamp currency amount debit credit]
   (with-open [writer (io/writer (ledger-location) :append true)]
-    (csv/write-csv writer [[(System/currentTimeMillis) amount debit credit currency]]))
-  )
+    (csv/write-csv writer [[timestamp currency amount debit credit]])))
 
 (defn init
-  "Initializes a ledger with its headers"
+  
+  ;; initializes a ledger with its headers - unless exists
   []
   (if-not (.exists (io/file (ledger-location)))
-    (account "amount" "debit" "credit" "currency")))
+    (record "timestamp" "currency" "amount" "debit" "credit")))
+
+(defn account
+
+  ;; variadic for uncredited records
+  ([currency amount debit]
+   (account currency amount debit "energy"))
+
+  ;; basic debit & credit record
+  ([currency amount debit credit]
+   (record (System/currentTimeMillis) currency amount debit credit)))
 
 (defn report
-  "Reports ledger status"
+  
+  ;; reports ledger status
   [fname]
   (with-open [reader (io/reader fname)]
     (doall
      (csv/read-csv reader))))
 
 (defn -main
-  "Main"
+  
+  ;; main
   [& args]
   (init)
   (when (> (count args) 1)
