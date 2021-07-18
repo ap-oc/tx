@@ -34,13 +34,30 @@
   ([currency amount debit credit]
    (record (System/currentTimeMillis) currency amount debit credit)))
 
+(defn ledger
+
+  ;; converts CSV into a hashmap
+  [data]
+  (map zipmap
+       (->> (first data) (map keyword) repeat)
+       (rest data)))
+
+(defn month-old-filter
+
+  ;; filters transactions out of past 30 days
+  [tx]
+  (> (read-string (get tx :timestamp))
+     (- (System/currentTimeMillis) (* 1000 60 60 24 30))))
+
 (defn report
   
   ;; reports ledger status
-  [fname]
-  (with-open [reader (io/reader fname)]
-    (doall
-     (csv/read-csv reader))))
+  []
+  (with-open [reader (io/reader (ledger-location))]
+    (->> (ledger (csv/read-csv reader))
+         (filter month-old-filter)
+         (println))
+    ))
 
 (defn -main
   
@@ -48,4 +65,5 @@
   [& args]
   (init)
   (when (> (count args) 1)
-    (apply account args)))
+    (apply account args))
+  (report))
