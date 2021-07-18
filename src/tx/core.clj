@@ -52,10 +52,10 @@
 (defn report
   
   ;; reports ledger status
-  []
+  [time-filter]
   (with-open [reader (io/reader (ledger-location))]
     (->> (ledger (csv/read-csv reader))
-         (filter month-old-filter)
+         (filter time-filter)
          (println))
     ))
 
@@ -66,4 +66,4 @@
   (init)
   (when (> (count args) 1)
     (apply account args))
-  (report))
+  (report month-old-filter))
